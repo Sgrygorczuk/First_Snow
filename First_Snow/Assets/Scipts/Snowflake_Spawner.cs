@@ -10,13 +10,13 @@ public class Snowflake_Spawner : MonoBehaviour
     
     //Snowflake management 
     private GameObject _snowflakes;         //Holds all the snowflakes 
-    private GameObject _snowflake;          //A copy of a snowflake to spawn
+    public GameObject _snowflake;          //A copy of a snowflake to spawn
 
     //Used for timing the spawn of new snowflakes 
     private float _spawnTime = 0;   //The timer
     private const float StartSpawn = 1.5f; //Max time the timer can be a
 
-    private void Start()
+    private void Awake()
     {
         //Grabs the data from the children of the game object 
         _leftPointX = transform.Find("Left").position.x;       
@@ -24,8 +24,8 @@ public class Snowflake_Spawner : MonoBehaviour
         _yPosition = transform.Find("Left").position.y;
         _snowflakes = transform.Find("Snowflakes").gameObject;
         
-        //Grabs the data from a Snowflake object in the scene
-        _snowflake = GameObject.Find("Snowflake");
+        //Loads the snowflake gameobject from the Resources/PreFabs/Snowflake prefab 
+        _snowflake =  Resources.Load("PreFabs/Snowflake") as GameObject;
     }
 
     // Update is called once per frame

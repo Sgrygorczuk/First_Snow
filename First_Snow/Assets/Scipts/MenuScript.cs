@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class MenuScript : MonoBehaviour
 {
-    public static string nextSceneName = "Menu"; //Allows us to place the name of the scene we should transition to after completing the action
+    public string levelName = "MainMenu"; //Allows us to place the name of the scene we should transition to after completing the action
     
     private Animator _animator; //The animator that will allow us to fade out of the scene 
     private bool _actionCalled; //Keeps track of if the user has activated the fade 
@@ -26,9 +26,9 @@ public class MenuScript : MonoBehaviour
         StartCoroutine(ExitScene());
     }
     
-    private static IEnumerator ExitScene()
+    private IEnumerator ExitScene()
     {
         yield return new WaitForSeconds(1.2f);
-        SceneManager.LoadScene(nextSceneName);
+        SceneManager.LoadScene(levelName);
     }
 }
