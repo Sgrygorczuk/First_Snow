@@ -1,11 +1,10 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGameFlow : MonoBehaviour
 {
     private Player _player;
+    private Shop _shop;
     private float _shopYPosition;
     
     private enum GameState             
@@ -23,6 +22,7 @@ public class LevelGameFlow : MonoBehaviour
     private void Start()
     {
         _player = GameObject.Find($"Player").transform.GetComponent<Player>();
+        _shop = GameObject.Find($"Shop").transform.GetComponent<Shop>();
         _shopYPosition = GameObject.Find($"Shop").transform.position.y - 3;
     }
 
@@ -43,6 +43,7 @@ public class LevelGameFlow : MonoBehaviour
             }
             case GameState.Shop:
             {
+                Shopping();
                 break;
             }
             case GameState.Falling:
@@ -67,16 +68,47 @@ public class LevelGameFlow : MonoBehaviour
     {
         if (_player.transform.position.y < _shopYPosition)
         {
-            //Set HitBox Off
-            //Set Sprite Off
             _player.BackToShop();
         }
         else
         {
-            //Set HitBox Off
-            //Set Sprite Off
             _player.ScreenSpeedReset();
             _currentState = GameState.Shop;
+        }
+    }
+
+    private void Shopping()
+    {
+        var shopPosition = _shop.GetShopPosition();
+        
+        //If Left or Right is clicked move in the menu and update the data
+        if (Input.GetButtonDown($"Left"))
+        {
+            if (shopPosition == 0) return;
+            _shop.SetShopPosition(shopPosition - 1);
+            _shop.UpdateData();
+
+        }
+        else if (Input.GetButtonDown($"Right"))
+        {
+            if (shopPosition == 3) return;
+            _shop.SetShopPosition(shopPosition + 1);
+            _shop.UpdateData();
+        }
+
+        //If the Action button is pressed the player will attempt to buy an item or if they case is 3 will leave 
+        //shop and start falling. 
+        if (!Input.GetButtonDown($"Action")) return;
+        switch (shopPosition)
+        {
+            case 0:
+            case 1:
+            case 2:
+                _shop.Upgrade();
+                break;
+            case 3:
+                
+                break;
         }
     }
 }
