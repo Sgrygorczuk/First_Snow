@@ -4,54 +4,83 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private Vector3 _screenSpeed = Vector3.zero;
+    private Vector3 _screenSpeed = Vector3.zero; //Keeps track of speed  
+    
+    private BoxCollider2D _boxCollider2D;           //To Enable and Disable the box collider 
+    private CircleCollider2D _circleCollider2D;      //To Enable and Disable the circle collider and update the radius 
+    private Rigidbody2D _rigidbody2D;               //To change the gravity setting 
+    private SpriteRenderer _spriteRenderer;         //To change the sprite visibility 
+    private TextMeshPro _waterParticleText;         //To update the currency in text for player to see 
+    
+    private int _waterParticles = 1000;                                 //How much money the player has 
 
-    private BoxCollider2D _boxCollider2D;
-    private Rigidbody2D _rigidbody2D;
-    private SpriteRenderer _spriteRenderer;
-
-    private int _waterParticles = 1000;
-    private TextMeshPro _waterParticleText;
-    private List<SpriteRenderer> _jumps = new List<SpriteRenderer>();
-    private int _jumpsMAX;
-    private int _jumpsAvailable;
-    private float _gravity = 0.1f;
+    private List<SpriteRenderer> _jumps = new List<SpriteRenderer>();   //Holds the sprites for the jump power up 
+    private int _jumpsMax;                                              //Keeps track of how many times the player can jump (MAX times)
+    private int _jumpsAvailable;                                        //How many times the player can use the jump action this round 
+    
+    private float _gravity = 0.1f;           //The gravity at which the player will fall
 
     // Start is called before the first frame update
     private void Start()
     {
+        //Grab components directly from the game object 
         _boxCollider2D = transform.GetComponent<BoxCollider2D>();
         _rigidbody2D = transform.GetComponent<Rigidbody2D>();
+        _circleCollider2D = transform.GetComponent<CircleCollider2D>();
+        //Grab the component from child of this game object 
         _spriteRenderer = transform.Find($"Sprite").transform.GetComponent<SpriteRenderer>();
         
-        _waterParticleText = GameObject.Find($"Camera").transform.Find($"WP_Text").GetComponent<TextMeshPro>();
-        _waterParticleText.text = _waterParticles.ToString();
-        
-        for (var i = 0; i < GameObject.Find($"Camera").transform.childCount; i++)
+        //Grabs the child of the Virtual Camera and immediately updates it to show the value of current player currency 
+        _waterParticleText = GameObject.Find($"VirtualCamera").transform.Find($"WP_Text").GetComponent<TextMeshPro>();
+        _waterParticleText.text = _waterParticles + " WP";
+
+        //Goes through the children of Virtual Camera and pulls out anything with the name Fly saving them to the array to be later modified 
+        for (var i = 0; i < GameObject.Find($"VirtualCamera").transform.childCount; i++)
         {
-            if (GameObject.Find($"Camera").transform.GetChild(i).name == "Fly")
+            if (GameObject.Find($"VirtualCamera").transform.GetChild(i).name == "Fly")
             {
-                _jumps.Add(GameObject.Find($"Camera").transform.GetChild(i).GetComponent<SpriteRenderer>());
+                _jumps.Add(GameObject.Find($"VirtualCamera").transform.GetChild(i).GetComponent<SpriteRenderer>());
             }
         }
 
+        //Goes through all the saved "Fly" objects and clears the sprite until the player unlocks them 
         foreach (var sprite in _jumps)
         {
             sprite.color = Color.clear;
         }
         
+        //Hides the player 
         HidePlayer();
     }
 
+    //Upgrades the max number of jumps the player can perform during a fall, then updates the visual data 
     public void UpgradeJumps()
     {
-        _jumpsMAX++;
+        _jumpsMax++;
         ResetJumpCounter();
     }
 
-    public void ResetJumpCounter()
+    //Upgrades decent speed, making gravity half as strong 
+    public void UpgradeSurface()
     {
-        _jumpsAvailable = _jumpsMAX;
+        _gravity /= 2;
+    }
+
+    //Upgrades the radius of which can affect the water particles to be attracted to the player 
+    public void UpgradeRadius()
+    {
+        _circleCollider2D.radius++;
+    }
+
+    //Resets the amount of available jumps back to the Max and updates visual data 
+    private void ResetJumpCounter()
+    {
+        _jumpsAvailable = _jumpsMax;
+        UpdateJumpVisual();
+    }
+
+    private void UpdateJumpVisual()
+    {
         for (var i = 0; i < _jumps.Count; i++)
         {
             _jumps[i].color = i < _jumpsAvailable ? Color.white : Color.clear;
@@ -59,18 +88,20 @@ public class Player : MonoBehaviour
     }
 
     //Hides player by removing the gravity, turning off the box collider and making the sprite clear 
-    public void HidePlayer()
+    private void HidePlayer()
     {
         _rigidbody2D.gravityScale = 0;
         _boxCollider2D.enabled = false;
+        _circleCollider2D.enabled = false;
         _spriteRenderer.color = Color.clear;
     }
     
     //Shows player by adding the gravity, turning on the box collider and making the sprite white 
     public void ShowPlayer()
     {
-        _rigidbody2D.gravityScale = 0.1f;
+        _rigidbody2D.gravityScale = _gravity;
         _boxCollider2D.enabled = true;
+        _circleCollider2D.enabled = true;
         _spriteRenderer.color = Color.white;
     }
 
@@ -91,14 +122,53 @@ public class Player : MonoBehaviour
         _screenSpeed = Vector3.zero;
     }
 
+    //Gives back the current value of the water particle, used to see if the player has enough to pay
     public int WaterParticleValue()
     {
         return _waterParticles;
     }
 
+    //Pays the amount required and updates the visual 
     public void PayWaterParticles(int cost)
     {
         _waterParticles -= cost;
-        _waterParticleText.text = _waterParticles.ToString();
+        _waterParticleText.text = _waterParticles + " WP";
+    }
+
+    //Moves the player left and right
+    public void MovePlayer(bool side)
+    {
+        var xSpeed = side ?  3 : -3;
+        _rigidbody2D.velocity = new Vector2(xSpeed, _rigidbody2D.velocity.y);
+    }
+
+    //Stops player from moving 
+    public void StopMoving()
+    {
+        _rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
+    }
+
+    //If possible sends the snowflake flying up 
+    public void Jump()
+    {
+        if (_jumpsAvailable <= 0) return;
+        _jumpsAvailable--;
+        _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 2);
+        UpdateJumpVisual();
+    }
+
+    //If the player hits collides with anything it dies or if it gets to the goal zone it processed to end the game 
+    private void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.CompareTag($"Damage"))
+        {
+            HidePlayer();
+            ResetJumpCounter();
+            GameObject.Find($"Camera").GetComponent<LevelGameFlow>().Death();
+        }
+        else if (col.CompareTag($"Win"))
+        {
+            
+        }
     }
 }

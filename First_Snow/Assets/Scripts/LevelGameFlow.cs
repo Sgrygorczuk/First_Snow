@@ -23,7 +23,7 @@ public class LevelGameFlow : MonoBehaviour
     {
         _player = GameObject.Find($"Player").transform.GetComponent<Player>();
         _shop = GameObject.Find($"Shop").transform.GetComponent<Shop>();
-        _shopYPosition = GameObject.Find($"Shop").transform.position.y - 3;
+        _shopYPosition = GameObject.Find($"Shop").transform.position.y - 2;
     }
 
     // Update is called once per frame
@@ -48,6 +48,7 @@ public class LevelGameFlow : MonoBehaviour
             }
             case GameState.Falling:
             {
+                Falling();
                 break;
             }
         }
@@ -66,10 +67,12 @@ public class LevelGameFlow : MonoBehaviour
     //Moves the player from wherever they are back to the shop 
     private void MovingSession()
     {
+        //If the player hasn't reached the shop move to the top
         if (_player.transform.position.y < _shopYPosition)
         {
             _player.BackToShop();
         }
+        //If player has reached shop allow them to start shopping 
         else
         {
             _player.ScreenSpeedReset();
@@ -107,8 +110,33 @@ public class LevelGameFlow : MonoBehaviour
                 _shop.Upgrade();
                 break;
             case 3:
-                
+                _player.ShowPlayer();
+                _currentState = GameState.Falling;
                 break;
         }
+    }
+
+    private void Falling()
+    {
+        if (Input.GetButton($"Left"))
+        {
+            _player.MovePlayer(false);
+        }
+        else if (Input.GetButton($"Right"))
+        {
+            _player.MovePlayer(true);
+        }
+        else
+        {
+            _player.StopMoving();
+        }
+        
+        if (!Input.GetButtonDown($"Action")) return;
+        _player.Jump();
+    }
+
+    public void Death()
+    {
+        _currentState = GameState.Moving;
     }
 }

@@ -9,8 +9,8 @@ public class Shop : MonoBehaviour
 
     private readonly string[] _descLines = new[]
     {
-        "Water Particles Gravitate towards you.", "You can press [Space] and the wind will make you rise.",
-        "Your surface area increases making your descent slower.", "Begin falling."
+        "Water Particles Gravitate towards you.", "You can press [Space] and the wind will make you rise. By the way do you smell that?",
+        "Your surface area increases making your descent slower. Hexagons are the Bestagons.", "Begin falling."
     };
 
     private int[] _upgradeRank = new[] { 0, 0, 0 };
@@ -82,15 +82,18 @@ public class Shop : MonoBehaviour
         _upgradeCost[_shopPosition] *= 2;
         //Update the visuals 
         UpdateData();
+        //Updates the Data inside of player with the purchase choice 
+        UpgradePlayer();
     }
 
+    //Goes through the choices of upgrading the player component based on which area of the shop we're in 
     private void UpgradePlayer()
     {
         switch (_shopPosition)
         {
             case 0:
             {
-
+                GameObject.Find($"Player").GetComponent<Player>().UpgradeRadius();
                 break;
             }
             case 1:
@@ -100,7 +103,7 @@ public class Shop : MonoBehaviour
             }
             case 2:
             {
-
+                GameObject.Find($"Player").GetComponent<Player>().UpgradeSurface();
                 break;
             }
         }
