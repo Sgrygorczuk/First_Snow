@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -51,6 +52,11 @@ public class Player : MonoBehaviour
         
         //Hides the player 
         HidePlayer();
+    }
+
+    private void FixedUpdate()
+    {
+        //_rigidbody2D.velocity = Vector3.ClampMagnitude(_rigidbody2D.velocity, 2);
     }
 
     //Upgrades the max number of jumps the player can perform during a fall, then updates the visual data 
@@ -160,15 +166,18 @@ public class Player : MonoBehaviour
     //If the player hits collides with anything it dies or if it gets to the goal zone it processed to end the game 
     private void OnTriggerEnter2D(Collider2D col)
     {
+        if (col.CompareTag($"WP") && _boxCollider2D.IsTouching(col))
+        {
+            PayWaterParticles(-10);
+            col.transform.GetComponent<WaterParticles>().TurnOff();
+        }
+        
+        /*
         if (col.CompareTag($"Damage"))
         {
             HidePlayer();
             ResetJumpCounter();
             GameObject.Find($"Camera").GetComponent<LevelGameFlow>().Death();
-        }
-        else if (col.CompareTag($"Win"))
-        {
-            
-        }
+        }*/
     }
 }
