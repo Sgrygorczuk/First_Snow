@@ -24,6 +24,9 @@ public class Shop : MonoBehaviour
     private TextMeshPro _title; //Displays the title of the highlighted menu object
     private TextMeshPro _desc; //Displays the description of the highlighted menu object 
     private TextMeshPro _cost; //Displays the description of the highlighted menu object 
+
+    private AudioSource _approve;
+    private AudioSource _deny;
     
     // Start is called before the first frame update
     private void Start()
@@ -37,6 +40,10 @@ public class Shop : MonoBehaviour
         //Finds the desc text display and sets the data to first position in array 
         _cost = transform.Find($"Menu").Find($"Cost").GetComponent<TextMeshPro>();
 
+        _approve = transform.Find($"Approve").GetComponent<AudioSource>();
+        
+        _deny = transform.Find($"Deny").GetComponent<AudioSource>();
+        
         //Goes through all the children in the Menu, looks for those with the name Item and then extra the child 
         //called White, this is used to highlight what is currently looked at 
         for (var i = 0; i < transform.Find($"Menu").childCount; i++)
@@ -68,22 +75,30 @@ public class Shop : MonoBehaviour
     public void Upgrade()
     {
         //Checks if the player has enough money to do the upgrade and that the rank is less than 3 (MAX) rank
-        if (GameObject.Find($"Player").GetComponent<Player>().WaterParticleValue() < _upgradeCost[_shopPosition] ||
-            _upgradeRank[_shopPosition] >= 3) return;
-        //Takes out the player cash
-        GameObject.Find($"Player").GetComponent<Player>().PayWaterParticles(_upgradeCost[_shopPosition]);
-        //Updates the title to have the rank shown, if it's 2 or 3 (MAX) 
-        _titleLines[_shopPosition] = _upgradeRank[_shopPosition] != 2 ? 
-            _titleLines[_shopPosition].Replace(_upgradeRank[_shopPosition].ToString(), (_upgradeRank[_shopPosition] + 1).ToString()) 
-            : _titleLines[_shopPosition].Replace(_upgradeRank[_shopPosition].ToString(), ("MAX"));
-        //Updates the rank value 
-        _upgradeRank[_shopPosition]++;
-        //Doubles cost for next upgrade for that item 
-        _upgradeCost[_shopPosition] *= 2;
-        //Update the visuals 
-        UpdateData();
-        //Updates the Data inside of player with the purchase choice 
-        UpgradePlayer();
+        if (GameObject.Find($"Player").GetComponent<Player>().WaterParticleValue() > _upgradeCost[_shopPosition] &&
+            _upgradeRank[_shopPosition] < 3)
+        {
+            //Takes out the player cash
+            GameObject.Find($"Player").GetComponent<Player>().PayWaterParticles(_upgradeCost[_shopPosition]);
+            //Updates the title to have the rank shown, if it's 2 or 3 (MAX) 
+            _titleLines[_shopPosition] = _upgradeRank[_shopPosition] != 2
+                ? _titleLines[_shopPosition].Replace(_upgradeRank[_shopPosition].ToString(),
+                    (_upgradeRank[_shopPosition] + 1).ToString())
+                : _titleLines[_shopPosition].Replace(_upgradeRank[_shopPosition].ToString(), ("MAX"));
+            //Updates the rank value 
+            _upgradeRank[_shopPosition]++;
+            //Doubles cost for next upgrade for that item 
+            _upgradeCost[_shopPosition] *= 2;
+            //Update the visuals 
+            UpdateData();
+            //Updates the Data inside of player with the purchase choice 
+            UpgradePlayer();
+            _approve.Play();
+        }
+        else
+        {
+            _deny.Play();
+        }
     }
 
     //Goes through the choices of upgrading the player component based on which area of the shop we're in 

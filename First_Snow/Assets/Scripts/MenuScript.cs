@@ -19,11 +19,21 @@ public class MenuScript : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
+        
+        if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.LinuxPlayer)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+        }
+        
         //If player clicks the Action Button play the Fade animation and stop user from activating it again 
         if (!Input.GetButtonDown($"Action") || _actionCalled) return;
         _animator.Play($"Fade");
         _actionCalled = true;
         StartCoroutine(ExitScene());
+        
     }
     
     private IEnumerator ExitScene()

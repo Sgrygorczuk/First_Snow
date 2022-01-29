@@ -13,13 +13,14 @@ public class Player : MonoBehaviour
     private SpriteRenderer _spriteRenderer;         //To change the sprite visibility 
     private TextMeshPro _waterParticleText;         //To update the currency in text for player to see 
     
-    private int _waterParticles = 1000;                                 //How much money the player has 
+    private int _waterParticles = 0;                                 //How much money the player has 
 
     private List<SpriteRenderer> _jumps = new List<SpriteRenderer>();   //Holds the sprites for the jump power up 
     private int _jumpsMax;                                              //Keeps track of how many times the player can jump (MAX times)
     private int _jumpsAvailable;                                        //How many times the player can use the jump action this round 
     
     private float _gravity = 0.1f;           //The gravity at which the player will fall
+    private float _maxY = -8;
 
     // Start is called before the first frame update
     private void Start()
@@ -32,15 +33,15 @@ public class Player : MonoBehaviour
         _spriteRenderer = transform.Find($"Sprite").transform.GetComponent<SpriteRenderer>();
         
         //Grabs the child of the Virtual Camera and immediately updates it to show the value of current player currency 
-        _waterParticleText = GameObject.Find($"VirtualCamera").transform.Find($"WP_Text").GetComponent<TextMeshPro>();
+        _waterParticleText = GameObject.Find($"VirtualCamera").transform.Find($"PlayerStats").transform.Find($"WP_Text").GetComponent<TextMeshPro>();
         _waterParticleText.text = _waterParticles + " WP";
 
         //Goes through the children of Virtual Camera and pulls out anything with the name Fly saving them to the array to be later modified 
-        for (var i = 0; i < GameObject.Find($"VirtualCamera").transform.childCount; i++)
+        for (var i = 0; i < GameObject.Find($"VirtualCamera").transform.Find($"PlayerStats").transform.childCount; i++)
         {
-            if (GameObject.Find($"VirtualCamera").transform.GetChild(i).name == "Fly")
+            if (GameObject.Find($"VirtualCamera").transform.Find($"PlayerStats").transform.GetChild(i).name == "Fly")
             {
-                _jumps.Add(GameObject.Find($"VirtualCamera").transform.GetChild(i).GetComponent<SpriteRenderer>());
+                _jumps.Add(GameObject.Find($"VirtualCamera").transform.Find($"PlayerStats").transform.GetChild(i).GetComponent<SpriteRenderer>());
             }
         }
 
@@ -56,7 +57,10 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //_rigidbody2D.velocity = Vector3.ClampMagnitude(_rigidbody2D.velocity, 2);
+        if (_rigidbody2D.velocity.y < _maxY)
+        {
+            _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, _maxY);
+        }
     }
 
     //Upgrades the max number of jumps the player can perform during a fall, then updates the visual data 
@@ -69,7 +73,8 @@ public class Player : MonoBehaviour
     //Upgrades decent speed, making gravity half as strong 
     public void UpgradeSurface()
     {
-        _gravity /= 2;
+        _gravity -= 0.015f;
+        _maxY -= 2;
     }
 
     //Upgrades the radius of which can affect the water particles to be attracted to the player 
@@ -97,6 +102,8 @@ public class Player : MonoBehaviour
     private void HidePlayer()
     {
         _rigidbody2D.gravityScale = 0;
+        _rigidbody2D.velocity = Vector2.zero;
+        transform.position = new Vector3(0, transform.position.y, 0);
         _boxCollider2D.enabled = false;
         _circleCollider2D.enabled = false;
         _spriteRenderer.color = Color.clear;
@@ -159,25 +166,34 @@ public class Player : MonoBehaviour
     {
         if (_jumpsAvailable <= 0) return;
         _jumpsAvailable--;
-        _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 2);
+        _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 1);
         UpdateJumpVisual();
     }
 
     //If the player hits collides with anything it dies or if it gets to the goal zone it processed to end the game 
     private void OnTriggerEnter2D(Collider2D col)
     {
+        
         if (col.CompareTag($"WP") && _boxCollider2D.IsTouching(col))
         {
             PayWaterParticles(-10);
             col.transform.GetComponent<WaterParticles>().TurnOff();
         }
         
-        /*
-        if (col.CompareTag($"Damage"))
+        if (col.CompareTag($"Damage") && _boxCollider2D.IsTouching(col))
         {
             HidePlayer();
             ResetJumpCounter();
+            col.transform.gameObject.GetComponent<AudioSource>().Play();
             GameObject.Find($"Camera").GetComponent<LevelGameFlow>().Death();
-        }*/
+        }
+
+        if (col.CompareTag($"Win"))
+        {
+            _rigidbody2D.gravityScale = 0;
+            _rigidbody2D.velocity = Vector2.zero;
+            GameObject.Find($"Camera").GetComponent<LevelGameFlow>().Win();
+        }
+        
     }
 }

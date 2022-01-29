@@ -9,6 +9,7 @@ public class WaterParticles : MonoBehaviour
     private SpriteRenderer _spriteRenderer; //Makes the sprite visible and not 
     private Animator _animator;             //Turns on the animation when collected 
     private Vector3 _originalPosition;      //Keeps track of where it used to be for when the level resets 
+    private AudioSource _collectSFX; 
 
     private bool _isInRange;                //Tells the particle it's close enough to move towards the player 
     
@@ -20,6 +21,7 @@ public class WaterParticles : MonoBehaviour
         _animator = GetComponent<Animator>();
         _collider2D = GetComponent<CircleCollider2D>();
         _originalPosition = transform.position;
+        _collectSFX = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -39,6 +41,7 @@ public class WaterParticles : MonoBehaviour
         _isInRange = false;
         _spriteRenderer.color = Color.clear;
         _animator.Play($"WaterParticleCollected");
+        _collectSFX.Play();
         StartCoroutine(FinishTurnOff());
     }
 

@@ -1,12 +1,14 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LevelGameFlow : MonoBehaviour
 {
     private Player _player;
     private Shop _shop;
     private float _shopYPosition;
-    
+    private GameObject _waterParticleHolder;
+
     private enum GameState             
     {
         Start,      //Loads in the scene using Exit Canvas, then makes the dad say the chat bubble
@@ -14,6 +16,7 @@ public class LevelGameFlow : MonoBehaviour
         Shop,       //Allows the user to buy items in the cloud and exit to fall down 
         Falling,    //The user is in control of the snowflake 
         End,        //The end cut scene plays, and we exit to credits scene 
+        Done,
     }
     
     private GameState _currentState = GameState.Start;      //Keeps track of what state we're currently in
@@ -24,11 +27,20 @@ public class LevelGameFlow : MonoBehaviour
         _player = GameObject.Find($"Player").transform.GetComponent<Player>();
         _shop = GameObject.Find($"Shop").transform.GetComponent<Shop>();
         _shopYPosition = GameObject.Find($"Shop").transform.position.y - 2;
+        _waterParticleHolder = GameObject.Find($"WaterParticles");
     }
 
     // Update is called once per frame
     public void Update()
     {
+        if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.LinuxPlayer)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+        }
+        
         switch (_currentState)
         {
             case GameState.Start:
@@ -49,6 +61,15 @@ public class LevelGameFlow : MonoBehaviour
             case GameState.Falling:
             {
                 Falling();
+                break;
+            }
+            case GameState.End:
+            {
+                End();
+                break;
+            }
+            case GameState.Done:
+            {
                 break;
             }
         }
@@ -112,6 +133,8 @@ public class LevelGameFlow : MonoBehaviour
             case 3:
                 _player.ShowPlayer();
                 _currentState = GameState.Falling;
+                _shop.SetShopPosition(0);
+                _shop.UpdateData();
                 break;
         }
     }
@@ -138,5 +161,39 @@ public class LevelGameFlow : MonoBehaviour
     public void Death()
     {
         _currentState = GameState.Moving;
+        StartCoroutine(ResetAllWaterParticles());
+    }
+
+    private IEnumerator ResetAllWaterParticles()
+    {
+        yield return new WaitForSeconds(1f);
+        for (var i = 0; i < _waterParticleHolder.transform.childCount; i++)
+        {
+            _waterParticleHolder.transform.GetChild(i).GetComponent<WaterParticles>().TurnOn();
+        }
+    }
+
+    public void Win()
+    {
+        _currentState = GameState.End;
+    }
+
+    private void End()
+    {
+        GameObject.Find("WinArt").GetComponent<Animator>().Play($"Win");
+        GameObject.Find($"Camera").GetComponent<AudioSource>().Stop();
+        GameObject.Find($"Goal").GetComponent<AudioSource>().Play();
+        StartCoroutine(EndWin());
+        _currentState = GameState.Done;
+    }
+    
+    private IEnumerator EndWin()
+    {
+        yield return new WaitForSeconds(1.5f);
+        GameObject.Find("WinArt").GetComponent<SpriteRenderer>().color = Color.white;
+        yield return new WaitForSeconds(2);
+        GameObject.Find("ExitCanvas").transform.Find($"Panel").GetComponent<Animator>().Play($"FadeIn");
+        yield return new WaitForSeconds(1.3f);
+        SceneManager.LoadScene("Credits");
     }
 }

@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Snowflake
   - WP
+  - Damage
+  - Win
   layers:
   - Default
   - TransparentFX
