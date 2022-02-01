@@ -1,14 +1,17 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class LevelGameFlow : MonoBehaviour
 {
-    private Player _player;
-    private Shop _shop;
-    private float _shopYPosition;
-    private GameObject _waterParticleHolder;
+    //===== External Objects 
+    private Player _player;                         //Script that controls the player 
+    private Shop _shop;                             //Script that controls the player 
+    private float _shopYPosition;                   //Where the shop is located used to go up whenever game starts/player dies 
+    private GameObject _waterParticleHolder;        //Holds to the Game Object where all of the Water Particles are stored in
 
+    //===== Game Flow 
     private enum GameState             
     {
         Start,      //Loads in the scene using Exit Canvas, then makes the dad say the chat bubble
@@ -16,23 +19,31 @@ public class LevelGameFlow : MonoBehaviour
         Shop,       //Allows the user to buy items in the cloud and exit to fall down 
         Falling,    //The user is in control of the snowflake 
         End,        //The end cut scene plays, and we exit to credits scene 
-        Done,
+        Done,       //After end we just go to this state where nothing updates 
     }
     
     private GameState _currentState = GameState.Start;      //Keeps track of what state we're currently in
 
+    //==================================================================================================================
+    // Functions 
+    //==================================================================================================================
+    
+    //==================================================================================================================
+    // Base Functions  
+    //==================================================================================================================
 
     private void Start()
     {
-        _player = GameObject.Find($"Player").transform.GetComponent<Player>();
-        _shop = GameObject.Find($"Shop").transform.GetComponent<Shop>();
-        _shopYPosition = GameObject.Find($"Shop").transform.position.y - 2;
-        _waterParticleHolder = GameObject.Find($"WaterParticles");
+        _player = GameObject.Find($"Player").transform.GetComponent<Player>();      //Gets the player script 
+        _shop = GameObject.Find($"Shop").transform.GetComponent<Shop>();            //Gets the shop script 
+        _shopYPosition = GameObject.Find($"Shop").transform.position.y - 2;         //Gets height - 2 so camera is positioned right 
+        _waterParticleHolder = GameObject.Find($"WaterParticles");                  //Gets the water particle collector object 
     }
 
     // Update is called once per frame
     public void Update()
     {
+        //Checks if the player is playing a desktop version if they are enables them to use ESC to quit out of the game 
         if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.LinuxPlayer)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -41,6 +52,7 @@ public class LevelGameFlow : MonoBehaviour
             }
         }
         
+        //Checks what state the game is currently in and updates it 
         switch (_currentState)
         {
             case GameState.Start:
@@ -72,9 +84,15 @@ public class LevelGameFlow : MonoBehaviour
             {
                 break;
             }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
+    //==================================================================================================================
+    // Game States   
+    //==================================================================================================================
+    
     //Starts the game by playing the chat animation, giving time for the player to read it and then transitioning 
     //to showing the whole level to the player by moving across the map to the very top
     private IEnumerator StartSession()
@@ -101,6 +119,8 @@ public class LevelGameFlow : MonoBehaviour
         }
     }
 
+    //The player has reached the shop and now is allowed to look at all of the the upgrades and purchase them if 
+    //they have enough water particles 
     private void Shopping()
     {
         var shopPosition = _shop.GetShopPosition();
@@ -139,8 +159,12 @@ public class LevelGameFlow : MonoBehaviour
         }
     }
 
+    //The player is now in the game controlling the snow false they can move left or right and if have the ability 
+    //Jump 
     private void Falling()
     {
+        
+        //Moves left or right, or stops if no button is pressed 
         if (Input.GetButton($"Left"))
         {
             _player.MovePlayer(false);
@@ -154,30 +178,12 @@ public class LevelGameFlow : MonoBehaviour
             _player.StopMoving();
         }
         
+        //If player presses action button performs jump 
         if (!Input.GetButtonDown($"Action")) return;
         _player.Jump();
     }
 
-    public void Death()
-    {
-        _currentState = GameState.Moving;
-        StartCoroutine(ResetAllWaterParticles());
-    }
-
-    private IEnumerator ResetAllWaterParticles()
-    {
-        yield return new WaitForSeconds(1f);
-        for (var i = 0; i < _waterParticleHolder.transform.childCount; i++)
-        {
-            _waterParticleHolder.transform.GetChild(i).GetComponent<WaterParticles>().TurnOn();
-        }
-    }
-
-    public void Win()
-    {
-        _currentState = GameState.End;
-    }
-
+    //The player reached the goal and now we set the animation to play out 
     private void End()
     {
         GameObject.Find("WinArt").GetComponent<Animator>().Play($"Win");
@@ -187,6 +193,7 @@ public class LevelGameFlow : MonoBehaviour
         _currentState = GameState.Done;
     }
     
+    //Waiting for the animation to finish and load the Credits scene 
     private IEnumerator EndWin()
     {
         yield return new WaitForSeconds(1.5f);
@@ -195,5 +202,32 @@ public class LevelGameFlow : MonoBehaviour
         GameObject.Find("ExitCanvas").transform.Find($"Panel").GetComponent<Animator>().Play($"FadeIn");
         yield return new WaitForSeconds(1.3f);
         SceneManager.LoadScene("Credits");
+    }
+    
+    //==================================================================================================================
+    // Support  
+    //==================================================================================================================
+    
+    //The player hit a damage object and now we go back to scrolling to the top of the screen 
+    public void Death()
+    {
+        _currentState = GameState.Moving;
+        StartCoroutine(ResetAllWaterParticles());
+    }
+
+    //Goes through all of the water particles and resets them to their original position and intractability 
+    private IEnumerator ResetAllWaterParticles()
+    {
+        yield return new WaitForSeconds(1f);
+        for (var i = 0; i < _waterParticleHolder.transform.childCount; i++)
+        {
+            _waterParticleHolder.transform.GetChild(i).GetComponent<WaterParticles>().TurnOn();
+        }
+    }
+
+    //A call from player that they won the game and we can move to the End Game State 
+    public void Win()
+    {
+        _currentState = GameState.End;
     }
 }

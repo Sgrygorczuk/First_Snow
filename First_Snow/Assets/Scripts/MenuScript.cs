@@ -4,10 +4,20 @@ using UnityEngine.SceneManagement;
 
 public class MenuScript : MonoBehaviour
 {
-    private string _levelName = "Level"; //Allows us to place the name of the scene we should transition to after completing the action
-    
+    //==== External Objects 
     private Animator _animator; //The animator that will allow us to fade out of the scene 
-    private bool _actionCalled; //Keeps track of if the user has activated the fade 
+    
+    //===== Misc 
+    private string _levelName = "Level"; //Allows us to place the name of the scene we should transition to after completing the action
+    private bool _actionCalled;         //Keeps track of if the user has activated the fade 
+    
+    //==================================================================================================================
+    // Functions 
+    //==================================================================================================================
+    
+    //==================================================================================================================
+    // Base Functions  
+    //==================================================================================================================
     
     // Start is called before the first frame update
     private void Start()
@@ -19,7 +29,7 @@ public class MenuScript : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
-        
+        //Checks if this is the desktop version and if it is allow the player to used ESC to quit 
         if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.LinuxPlayer)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -36,6 +46,7 @@ public class MenuScript : MonoBehaviour
         
     }
     
+    //Allows time for the animation to play out then moves on to the level screen 
     private IEnumerator ExitScene()
     {
         yield return new WaitForSeconds(1.2f);

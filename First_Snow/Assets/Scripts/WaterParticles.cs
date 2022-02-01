@@ -1,17 +1,26 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
 public class WaterParticles : MonoBehaviour
 {
+    //====== External Objects  
     private Transform _playerTransform;     //Keeps track of where the player is 
     private CircleCollider2D _collider2D;   //Enables or disables the hit box of this Water Particle 
     private SpriteRenderer _spriteRenderer; //Makes the sprite visible and not 
     private Animator _animator;             //Turns on the animation when collected 
     private Vector3 _originalPosition;      //Keeps track of where it used to be for when the level resets 
-    private AudioSource _collectSFX; 
+    private AudioSource _collectSfx; 
 
+    //===== Misc 
     private bool _isInRange;                //Tells the particle it's close enough to move towards the player 
+    
+    //==================================================================================================================
+    // Functions 
+    //==================================================================================================================
+    
+    //==================================================================================================================
+    // Base Functions  
+    //==================================================================================================================
     
     // Start is called before the first frame update
     private void Start()
@@ -21,7 +30,7 @@ public class WaterParticles : MonoBehaviour
         _animator = GetComponent<Animator>();
         _collider2D = GetComponent<CircleCollider2D>();
         _originalPosition = transform.position;
-        _collectSFX = GetComponent<AudioSource>();
+        _collectSfx = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -33,6 +42,10 @@ public class WaterParticles : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, _playerTransform.position, 8 * Time.deltaTime);
         }
     }
+    
+    //==================================================================================================================
+    // Water Particle Active/Inactive  
+    //==================================================================================================================
 
     //Turns off the visibility and interactivity of the water particle till the end of this round 
     public void TurnOff()
@@ -41,7 +54,7 @@ public class WaterParticles : MonoBehaviour
         _isInRange = false;
         _spriteRenderer.color = Color.clear;
         _animator.Play($"WaterParticleCollected");
-        _collectSFX.Play();
+        _collectSfx.Play();
         StartCoroutine(FinishTurnOff());
     }
 
@@ -59,6 +72,10 @@ public class WaterParticles : MonoBehaviour
         transform.position = _originalPosition;
         _spriteRenderer.color = Color.white;
     }
+    
+    //==================================================================================================================
+    // Collisions  
+    //==================================================================================================================
 
     //Checks if the WP is near the player, if is then allow it to follow 
     private void OnTriggerEnter2D(Collider2D col)

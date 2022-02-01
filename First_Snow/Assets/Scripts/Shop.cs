@@ -4,29 +4,42 @@ using UnityEngine;
 
 public class Shop : MonoBehaviour
 {
+    //============= Shop Data 
+    //Keeps track of the title of the item, is modifiable 
     private string[] _titleLines = new[]
         { "[Particle Collector Lvl. 0]", "[Lucky Wind Lvl. 0]", "[Larger Surface Lvl. 0]", "[Exit Shop]" };
 
+    //Keeps track of the descriptions of the data, not modifiable 
     private readonly string[] _descLines = new[]
     {
         "Water Particles Gravitate towards you.", "You can press [Space] and the wind will make you rise. By the way do you smell that?",
         "Your surface area increases making your descent slower. Hexagons are the Bestagons.", "Begin falling."
     };
 
-    private int[] _upgradeRank = new[] { 0, 0, 0 };
-    private int[] _upgradeCost = new[] { 20, 40, 60, };
-
-    //Keeps track of the background color, to show which item is highlighted 
-    private List<SpriteRenderer> _colors = new List<SpriteRenderer>(); 
-
+    private int[] _upgradeRank = new[] { 0, 0, 0 };         //Keep track of what rank each upgrade is at 
+    private int[] _upgradeCost = new[] { 20, 40, 60, };     //Keeps track of how much it cost to upgrade it each item 
+    
     private int _shopPosition; //Current position of the user in the shop menu 
+    
+    //============ External Objects 
+    
+    //Keeps track of the background color, to show which item is highlighted 
+    private List<SpriteRenderer> _colors = new List<SpriteRenderer>();
 
     private TextMeshPro _title; //Displays the title of the highlighted menu object
-    private TextMeshPro _desc; //Displays the description of the highlighted menu object 
-    private TextMeshPro _cost; //Displays the description of the highlighted menu object 
-
-    private AudioSource _approve;
-    private AudioSource _deny;
+    private TextMeshPro _desc;  //Displays the description of the highlighted menu object 
+    private TextMeshPro _cost;  //Displays the description of the highlighted menu object 
+    private AudioSource _approve;   //Plays approving noise after player purchased something 
+    private AudioSource _deny;      //Plays denying noise if the player can't afford or is maxed out on item 
+    
+    
+    //==================================================================================================================
+    // Functions 
+    //==================================================================================================================
+    
+    //==================================================================================================================
+    // Base Function  
+    //==================================================================================================================
     
     // Start is called before the first frame update
     private void Start()
@@ -58,6 +71,10 @@ public class Shop : MonoBehaviour
         UpdateData();
     }
 
+    //==================================================================================================================
+    // Shop Movement  
+    //==================================================================================================================
+    
     //Returns the current position of the player in the shop menu 
     public int GetShopPosition()
     {
@@ -70,12 +87,16 @@ public class Shop : MonoBehaviour
     {
         _shopPosition = newPosition;
     }
+    
+    //==================================================================================================================
+    // Upgrade Functions  
+    //==================================================================================================================
 
     //Upgrades the currently looked at upgrade and updates it's data 
     public void Upgrade()
     {
         //Checks if the player has enough money to do the upgrade and that the rank is less than 3 (MAX) rank
-        if (GameObject.Find($"Player").GetComponent<Player>().WaterParticleValue() > _upgradeCost[_shopPosition] &&
+        if (GameObject.Find($"Player").GetComponent<Player>().WaterParticleValue() >= _upgradeCost[_shopPosition] &&
             _upgradeRank[_shopPosition] < 3)
         {
             //Takes out the player cash
@@ -124,6 +145,9 @@ public class Shop : MonoBehaviour
         }
     }
     
+    //==================================================================================================================
+    // Visual Update  
+    //==================================================================================================================
 
     //Updates the state of the data to show what's currently being displayed 
     public void UpdateData()

@@ -1,26 +1,38 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private Vector3 _screenSpeed = Vector3.zero; //Keeps track of speed  
-    
+    //================ External Objects 
     private BoxCollider2D _boxCollider2D;           //To Enable and Disable the box collider 
     private CircleCollider2D _circleCollider2D;      //To Enable and Disable the circle collider and update the radius 
     private Rigidbody2D _rigidbody2D;               //To change the gravity setting 
     private SpriteRenderer _spriteRenderer;         //To change the sprite visibility 
     private TextMeshPro _waterParticleText;         //To update the currency in text for player to see 
     
-    private int _waterParticles = 0;                                 //How much money the player has 
-
+    //============ Jumping Vars 
+    
     private List<SpriteRenderer> _jumps = new List<SpriteRenderer>();   //Holds the sprites for the jump power up 
     private int _jumpsMax;                                              //Keeps track of how many times the player can jump (MAX times)
     private int _jumpsAvailable;                                        //How many times the player can use the jump action this round 
     
+    //========== Speed Vars 
     private float _gravity = 0.1f;           //The gravity at which the player will fall
-    private float _maxY = -8;
+    private float _maxY = -12;               //Controls how fast you can fall at max speed 
+    
+    //=========== Misc 
+    private int _waterParticles = 0;           //How much money the player has 
+    private Vector3 _screenSpeed = Vector3.zero; //Keeps track of speed  
+    
+    //==================================================================================================================
+    //Functions 
+    //==================================================================================================================
+    
+    //==================================================================================================================
+    // Base Functions 
+    //==================================================================================================================
 
     // Start is called before the first frame update
     private void Start()
@@ -55,6 +67,7 @@ public class Player : MonoBehaviour
         HidePlayer();
     }
 
+    //The Fixed Update checks if player has reached max falling speed and caps them to it 
     private void FixedUpdate()
     {
         if (_rigidbody2D.velocity.y < _maxY)
@@ -63,6 +76,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    //==================================================================================================================
+    // Upgrades 
+    //==================================================================================================================
+    
     //Upgrades the max number of jumps the player can perform during a fall, then updates the visual data 
     public void UpgradeJumps()
     {
@@ -74,7 +91,7 @@ public class Player : MonoBehaviour
     public void UpgradeSurface()
     {
         _gravity -= 0.015f;
-        _maxY -= 2;
+        _maxY += 2f;
     }
 
     //Upgrades the radius of which can affect the water particles to be attracted to the player 
@@ -82,6 +99,10 @@ public class Player : MonoBehaviour
     {
         _circleCollider2D.radius++;
     }
+    
+    //==================================================================================================================
+    // Visual Updates 
+    //==================================================================================================================
 
     //Resets the amount of available jumps back to the Max and updates visual data 
     private void ResetJumpCounter()
@@ -90,6 +111,7 @@ public class Player : MonoBehaviour
         UpdateJumpVisual();
     }
 
+    //Updates the visual for the amount of jumps the player can perform 
     private void UpdateJumpVisual()
     {
         for (var i = 0; i < _jumps.Count; i++)
@@ -117,11 +139,15 @@ public class Player : MonoBehaviour
         _circleCollider2D.enabled = true;
         _spriteRenderer.color = Color.white;
     }
+    
+    //==================================================================================================================
+    // Cutscene Movement 
+    //==================================================================================================================
 
     //Pulls the player back to the shop from wherever they are at a increasing speed 
     public void BackToShop()
     {
-        if (_screenSpeed.y < 0.5f)
+        if (_screenSpeed.y < 1f)
         {
             _screenSpeed += Vector3.up / 250;
         }
@@ -129,11 +155,16 @@ public class Player : MonoBehaviour
         transform.position += _screenSpeed;
     }
 
+
     //Resets the speed to zero 
     public void ScreenSpeedReset()
     {
         _screenSpeed = Vector3.zero;
     }
+    
+    //==================================================================================================================
+    // Economy
+    //==================================================================================================================
 
     //Gives back the current value of the water particle, used to see if the player has enough to pay
     public int WaterParticleValue()
@@ -147,6 +178,10 @@ public class Player : MonoBehaviour
         _waterParticles -= cost;
         _waterParticleText.text = _waterParticles + " WP";
     }
+    
+    //==================================================================================================================
+    // Player Movement 
+    //==================================================================================================================
 
     //Moves the player left and right
     public void MovePlayer(bool side)
@@ -160,26 +195,47 @@ public class Player : MonoBehaviour
     {
         _rigidbody2D.velocity = new Vector2(0, _rigidbody2D.velocity.y);
     }
+    
+    //==================================================================================================================
+    // Jumping
+    //==================================================================================================================
 
     //If possible sends the snowflake flying up 
     public void Jump()
     {
         if (_jumpsAvailable <= 0) return;
+        var velocity = _rigidbody2D.velocity;
+        var yVelocity = velocity.y;
         _jumpsAvailable--;
-        _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, 1);
+        velocity = new Vector2(velocity.x, 1);
+        _rigidbody2D.velocity = velocity;
         UpdateJumpVisual();
+        StartCoroutine(JumpFall(yVelocity));
     }
+    
+    //2 Seconds after the jump the player gets back half their initial falling speed 
+    private IEnumerator JumpFall(float currentSpeed)
+    {
+        yield return new WaitForSeconds(2f);
+        _rigidbody2D.velocity = new Vector2(_rigidbody2D.velocity.x, currentSpeed/2);
+    }
+    
+    //==================================================================================================================
+    // Collision 
+    //==================================================================================================================
 
     //If the player hits collides with anything it dies or if it gets to the goal zone it processed to end the game 
     private void OnTriggerEnter2D(Collider2D col)
     {
         
+        //Updates player counter for WP 
         if (col.CompareTag($"WP") && _boxCollider2D.IsTouching(col))
         {
             PayWaterParticles(-10);
             col.transform.GetComponent<WaterParticles>().TurnOff();
         }
         
+        //Updates if the player hits a colliding object 
         if (col.CompareTag($"Damage") && _boxCollider2D.IsTouching(col))
         {
             HidePlayer();
@@ -188,6 +244,7 @@ public class Player : MonoBehaviour
             GameObject.Find($"Camera").GetComponent<LevelGameFlow>().Death();
         }
 
+        //Updates if the player hits the win zone 
         if (col.CompareTag($"Win"))
         {
             _rigidbody2D.gravityScale = 0;
