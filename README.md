@@ -12,8 +12,8 @@ Play:
 
 Screenshots:
 
-<img src="https://img.itch.zone/aW1hZ2UvMTM3MzQ0Mi83OTk4NzA1LmpwZw==/794x1000/w4NEW%2F.jpg" width="400">
-<img src="https://img.itch.zone/aW1hZ2UvMTM3MzQ0Mi83OTk4NzA0LmpwZw==/794x1000/m%2F8n%2F%2B.jpg" width="400">
+<img src="https://img.itch.zone/aW1hZ2UvMTM3MzQ0Mi84NjYzODY1LmdpZg==/original/Sjtyfs.gif" width="400">
+<img src="https://img.itch.zone/aW1hZ2UvMTM3MzQ0Mi84NjYzODY0LmdpZg==/original/044IQF.gif" width="400">
 
 Video:
 [First Snow Gameplay](https://www.youtube.com/watch?v=m2mEMW-TVXg)
